@@ -43,7 +43,7 @@ def cleanup():
 collection = get_jav_collection()
 # cleanup()
 
-spider = Spider(basic_url='https://www.javbus.us/')
+spider = Spider(basic_url='#')
 page_count = spider.get_page_count()
 print('The page count %d' % page_count)
 for i in range(1, page_count):
