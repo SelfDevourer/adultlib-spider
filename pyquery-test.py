@@ -40,8 +40,8 @@ def cleanup():
         shutil.rmtree('covers')
 
 
-jav_collection = get_jav_collection()
-cleanup()
+collection = get_jav_collection()
+# cleanup()
 
 spider = Spider(basic_url='https://www.javbus.us/')
 page_count = spider.get_page_count()
