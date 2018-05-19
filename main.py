@@ -15,9 +15,10 @@ def get_jav(**kwargs):
         'small_cover': kwargs['small_cover_url'],
         'local_small_cover': kwargs['local_small_cover'],
         'big_cover': kwargs['big_cover_url'],
-        'local_big_cover': kwargs['local_big_cover'],
+        'local_big_cover': kwargs['local_big_cover'], 'title': kwargs['title'],
         'create_time': datetime.datetime.now()
     }
+    jav.update(kwargs['info'])
     return jav
 
 
@@ -27,8 +28,8 @@ def get_jav_collection():
     return db['javs']
 
 
-def start_download_img(url, path):
-    t = DownloadThread(arg=(url, path))
+def start_download_img(url, file_name):
+    t = DownloadThread(arg=(url, file_name))
     t.setDaemon(True)
     t.start()
 
@@ -36,8 +37,14 @@ def start_download_img(url, path):
 def cleanup():
     coll = get_jav_collection();
     coll.remove()
-    if os.path.exists('covers'):
-        shutil.rmtree('covers')
+    folder_path = 'E:/workspace/adultlib/src/main/resources/static/covers/'
+    if os.path.exists(folder_path):
+        shutil.rmtree(folder_path)
+
+
+def get_text(key, info):
+    text = info('span.header:contains(' + key + ')').parent().text()
+    return text.split(' ')[1] if text != '' else None
 
 
 collection = get_jav_collection()
@@ -54,21 +61,30 @@ for i in range(1, page_count):
         result = collection.find_one({'number': number})
         if result is None:
             small_cover_url = item.find('img').attr("src")
-            local_small_cover = 'covers/' + number + '_small.jpg'
-            start_download_img(url=small_cover_url, path=local_small_cover)
+            start_download_img(url=small_cover_url, file_name=number + '_small')
 
             details_url = item.find('.movie-box').attr("href")
             container = spider.getdoc(url=details_url)('.container')
 
             big_cover_url = container.find('.bigImage img').attr('src')
-            local_big_cover = 'covers/' + number + '.jpg'
-            start_download_img(url=big_cover_url, path='covers/' + number + '.jpg')
+            start_download_img(url=big_cover_url, file_name=number)
+
+            title = container('h3').text()
+            title = title[len(number) + 1:len(title)]
 
             movie_info = container.find('.info')
+            info_dict = {
+                'release_date': get_text(key='發行日期', info=movie_info),
+                'movie_len': get_text(key='長度', info=movie_info),
+                'director': get_text(key='導演', info=movie_info),
+                'maker': get_text(key='製作商', info=movie_info),
+                'publisher': get_text(key='發行商', info=movie_info),
+                'series': get_text(key='系列', info=movie_info)
+            }
 
             jav = get_jav(number=number, details_url=details_url, small_cover_url=small_cover_url,
-                          local_small_cover=local_small_cover, big_cover_url=big_cover_url,
-                          local_big_cover=local_big_cover)
+                          local_small_cover='/covers/' + number + '_small.jpg', big_cover_url=big_cover_url,
+                          local_big_cover='/covers/' + number + '.jpg', title=title, info=info_dict)
             print(jav)
             collection.insert_one(jav)
             # print(movie_info)

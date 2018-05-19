@@ -11,11 +11,14 @@ class DownloadThread(threading.Thread):
         self.arg = arg
 
     def run(self):
-        folder = os.path.split(self.arg[1])[0]
+        file_name = self.arg[1]
+        folder = 'E:/workspace/adultlib/src/main/resources/static/covers/'
+        file = folder + file_name + '.jpg'
         if not os.path.exists(folder):
             os.makedirs(folder)
-        if not os.path.exists(self.arg[1]):
-            response = requests.get(self.arg[0])
-            with open(self.arg[1], 'wb') as f:
+        if not os.path.exists(file):
+            url = self.arg[0]
+            response = requests.get(url)
+            with open(file, 'wb') as f:
                 f.write(response.content)
-            print('Download %s is done' % self.arg[1])
+            print('Download %s is done' % file_name)
